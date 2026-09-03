@@ -116,7 +116,7 @@
 
 <script>
 const questions = [
-  {c:'作者',t:'meaning',q:'陳冠學是臺灣哪一類文學的代表作家？',o:['自然文學','鄉土小說','武俠文學','科幻文學'],a:'自然文學',e:'陳冠學為臺灣自然文學代表作家。'},
+  {c:'作者',t:'meaning',q:'陳冠學是臺灣哪一類文學的代表作家？',o:['鄉土文學','自然文學','武俠文學','科幻文學'],a:'鄉土文學',e:'陳冠學為臺灣鄉土文學代表作家。'},
   {c:'作者',t:'meaning',q:'陳冠學有「臺灣現代＿＿」的美稱。',o:['陶淵明','李白','杜甫','蘇軾'],a:'陶淵明',e:'重點：臺灣現代陶淵明。'},
   {c:'作者',t:'meaning',q:'陳冠學的代表作品是哪一本？',o:['《田園之秋》','《雅舍小品》','《背影》','《城南舊事》'],a:'《田園之秋》',e:'代表作為《田園之秋》。'},
 
@@ -182,7 +182,6 @@ const questions = [
 ];
 
 let mode='all', deck=[], index=0, score=0, streak=0, maxStreak=0, wrong=[], locked=false;
-
 const $ = id => document.getElementById(id);
 
 function shuffle(arr){
@@ -230,6 +229,7 @@ function renderQuestion(){
   $('questionText').textContent=q.q;
   $('feedback').className='feedback hidden';
   $('feedback').textContent='';
+
   const box=$('options');
   box.innerHTML='';
   shuffle(q.o).forEach(opt=>{
@@ -275,6 +275,7 @@ function answer(opt,button){
 function finish(){
   $('quizPanel').classList.add('hidden');
   $('resultPanel').classList.remove('hidden');
+
   const pct=deck.length?Math.round(score/deck.length*100):0;
   $('resultScore').textContent=`${score} / ${deck.length}`;
   $('resultSummary').textContent=`正確率 ${pct}% ・ 最長連續答對 ${maxStreak} 題`;
@@ -289,6 +290,7 @@ function finish(){
   }else{
     $('retryWrongBtn').disabled=false;
     $('retryWrongBtn').textContent=`只練這 ${wrong.length} 題`;
+
     wrong.forEach(q=>{
       const row=document.createElement('div');
       row.className='wrong-item';
@@ -299,7 +301,11 @@ function finish(){
 }
 
 $('startBtn').addEventListener('click',()=>start());
-$('retryWrongBtn').addEventListener('click',()=>{ if(wrong.length) start([...wrong]); });
+
+$('retryWrongBtn').addEventListener('click',()=>{
+  if(wrong.length) start([...wrong]);
+});
+
 $('restartBtn').addEventListener('click',()=>{
   $('resultPanel').classList.add('hidden');
   $('startPanel').classList.remove('hidden');
