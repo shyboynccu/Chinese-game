@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>《田園之秋選》複習挑戰</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#1f2937; --muted:#6b7280;
+      --border:#e5e7eb; --accent:#4f46e5; --accent-soft:#eef2ff;
+      --ok:#15803d; --ok-bg:#f0fdf4; --bad:#b91c1c; --bad-bg:#fef2f2;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",
+      "PingFang TC","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--text);
+    }
+    .wrap{max-width:760px;margin:auto;padding:20px 16px 48px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:26px;margin-bottom:8px}
+    .muted{color:var(--muted);line-height:1.7}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:16px 0}
+    button{
+      width:100%; min-height:50px; border-radius:14px; border:1px solid var(--border);
+      background:white; color:var(--text); font-size:16px; font-weight:650; padding:12px 14px;
+      cursor:pointer; -webkit-tap-highlight-color:transparent;
+    }
+    button:disabled{cursor:default;opacity:.85}
+    .primary{background:var(--accent);color:white;border-color:var(--accent)}
+    .mode.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+    .hidden{display:none!important}
+    .topline{display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:8px}
+    .bar{height:9px;background:#e9eaf0;border-radius:99px;overflow:hidden;margin-bottom:16px}
+    .bar>div{height:100%;width:0;background:var(--accent);transition:width .25s ease}
+    .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .badge{font-size:13px;background:#f3f4f6;border-radius:99px;padding:6px 10px;color:var(--muted)}
+    .question{font-size:21px;line-height:1.55;font-weight:750;margin-bottom:16px}
+    .options{display:grid;gap:11px}
+    .option{text-align:left;font-weight:650}
+    .option.correct{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+    .option.wrong{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+    .feedback{margin-top:14px;border-radius:14px;padding:14px;line-height:1.65}
+    .feedback.ok{background:var(--ok-bg);color:#166534}
+    .feedback.bad{background:var(--bad-bg);color:#991b1b}
+    .result{text-align:center}
+    .score-big{font-size:48px;font-weight:850;margin:8px 0}
+    .wrong-item{background:#f8fafc;border-radius:14px;padding:13px;margin-top:10px;line-height:1.55}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    footer{color:var(--muted);font-size:12px;text-align:center;margin-top:18px}
+    @media(max-width:520px){
+      .wrap{padding:14px 12px 36px}.card{padding:17px}.grid,.actions{grid-template-columns:1fr}
+      h1{font-size:23px}.question{font-size:19px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="startPanel">
+    <div class="card">
+      <div class="muted" style="font-size:14px">八上國文・第一課</div>
+      <h1>《田園之秋選》複習挑戰</h1>
+      <p class="muted">每次隨機抽題。點選答案後立即判定，並自動進入下一題；完成後可以只重練錯題。</p>
+
+      <div class="grid">
+        <button class="mode active" data-mode="all">🎯 綜合挑戰</button>
+        <button class="mode" data-mode="sound">🔊 字音特訓</button>
+        <button class="mode" data-mode="meaning">🧠 字義／詞性</button>
+        <button class="mode" data-mode="idiom">🧩 成語挑戰</button>
+      </div>
+
+      <button id="startBtn" class="primary">開始挑戰</button>
+    </div>
+  </section>
+
+  <section id="quizPanel" class="hidden">
+    <div class="topline">
+      <span id="progressText">1 / 20</span>
+      <span id="scoreText">答對 0 題</span>
+    </div>
+    <div class="bar"><div id="progressBar"></div></div>
+
+    <div class="card">
+      <div class="badges">
+        <span id="categoryBadge" class="badge"></span>
+        <span id="streakBadge" class="badge">🔥 0</span>
+      </div>
+      <div id="questionText" class="question"></div>
+      <div id="options" class="options"></div>
+      <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="resultPanel" class="hidden">
+    <div class="card result">
+      <div class="muted">挑戰完成</div>
+      <div id="resultScore" class="score-big">0 / 20</div>
+      <div id="resultSummary" class="muted"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>需要再複習</h3>
+      <div id="wrongList"></div>
+    </div>
+
+    <div class="actions">
+      <button id="retryWrongBtn">只練錯題</button>
+      <button id="restartBtn" class="primary">重新挑戰</button>
+    </div>
+  </section>
+
+  <footer>《田園之秋選》課堂練習複習版</footer>
+</div>
+
+<script>
+const questions = [
+  {c:'作者',t:'meaning',q:'陳冠學是臺灣哪一類文學的代表作家？',o:['自然文學','鄉土小說','武俠文學','科幻文學'],a:'自然文學',e:'陳冠學為臺灣自然文學代表作家。'},
+  {c:'作者',t:'meaning',q:'陳冠學有「臺灣現代＿＿」的美稱。',o:['陶淵明','李白','杜甫','蘇軾'],a:'陶淵明',e:'重點：臺灣現代陶淵明。'},
+  {c:'作者',t:'meaning',q:'陳冠學的代表作品是哪一本？',o:['《田園之秋》','《雅舍小品》','《背影》','《城南舊事》'],a:'《田園之秋》',e:'代表作為《田園之秋》。'},
+
+  {c:'字音',t:'sound',q:'「冠夫姓」的「冠」讀音是？',o:['ㄍㄨㄢˋ','ㄍㄨㄢ','ㄍㄨㄥˋ','ㄍㄨㄣˋ'],a:'ㄍㄨㄢˋ',e:'「冠夫姓」的冠作動詞，讀 ㄍㄨㄢˋ。'},
+  {c:'詞性',t:'meaning',q:'「冠夫姓」的「冠」是什麼詞性？',o:['動詞','名詞','形容詞','副詞'],a:'動詞',e:'表示把夫姓加在自己姓氏之前，屬動詞。'},
+  {c:'字音',t:'sound',q:'「艷冠群芳」的「冠」讀音是？',o:['ㄍㄨㄢˋ','ㄍㄨㄢ','ㄍㄨㄥ','ㄍㄨㄣ'],a:'ㄍㄨㄢˋ',e:'「冠群芳」有超越、居第一之意。'},
+  {c:'詞性',t:'meaning',q:'「艷冠群芳」的「冠」是什麼詞性？',o:['動詞','名詞','形容詞','副詞'],a:'動詞',e:'冠＝超越、居第一，因此是動詞。'},
+  {c:'字音',t:'sound',q:'「衣冠楚楚」的「冠」讀音是？',o:['ㄍㄨㄢ','ㄍㄨㄢˋ','ㄍㄨㄥ','ㄍㄨㄣˋ'],a:'ㄍㄨㄢ',e:'衣冠的「冠」指帽子，讀 ㄍㄨㄢ。'},
+  {c:'詞性',t:'meaning',q:'「衣冠楚楚」的「冠」是什麼詞性？',o:['名詞','動詞','副詞','形容詞'],a:'名詞',e:'此處的冠指帽子，屬名詞。'},
+
+  {c:'成語',t:'idiom',q:'比喻達官顯貴聚集，應選哪個成語？',o:['冠蓋雲集','門可羅雀','人才濟濟','車水馬龍'],a:'冠蓋雲集',e:'「冠蓋雲集」比喻達官顯貴聚集。'},
+  {c:'成語',t:'idiom',q:'比喻心中有不快的嫌隙：心懷＿＿。',o:['芥蒂','大志','感激','憂患'],a:'芥蒂',e:'答案是「心懷芥蒂」。'},
+
+  {c:'字音',t:'sound',q:'「滂沱」的「滂」讀音是？',o:['ㄆㄤ','ㄆㄤˊ','ㄅㄤ','ㄅㄤˋ'],a:'ㄆㄤ',e:'滂沱：ㄆㄤ ㄊㄨㄛˊ。'},
+  {c:'字音',t:'sound',q:'「滂沱」的「沱」讀音是？',o:['ㄊㄨㄛˊ','ㄊㄚˊ','ㄉㄨㄛˋ','ㄊㄨㄛ'],a:'ㄊㄨㄛˊ',e:'滂沱：ㄆㄤ ㄊㄨㄛˊ。'},
+  {c:'字義',t:'meaning',q:'「滂沱」主要形容什麼？',o:['雨勢盛大的樣子','風勢微弱','天氣晴朗','水面平靜'],a:'雨勢盛大的樣子',e:'滂沱形容雨勢盛大。'},
+  {c:'成語',t:'idiom',q:'鼻涕眼淚如雨落下，可用哪個成語？',o:['涕泗滂沱','喜極而泣','淚如雨下','泣不成聲'],a:'涕泗滂沱',e:'答案為「涕泗滂沱」。'},
+
+  {c:'詞性',t:'meaning',q:'「霹靂環起」的「環」是什麼詞性？',o:['副詞','動詞','名詞','形容詞'],a:'副詞',e:'「環」修飾「起」，表示四處。'},
+  {c:'詞性',t:'meaning',q:'「霹靂環起」的「起」是什麼詞性？',o:['動詞','名詞','副詞','介詞'],a:'動詞',e:'「起」表示發生、響起，屬動詞。'},
+  {c:'成語',t:'idiom',q:'比喻突發的驚人事件，最適合哪個成語？',o:['晴天霹靂','風和日麗','雷厲風行','雨過天青'],a:'晴天霹靂',e:'晴天霹靂比喻突然發生的驚人事件。'},
+
+  {c:'字音',t:'sound',q:'「攫」的讀音是？',o:['ㄐㄩㄝˊ','ㄏㄨㄛˋ','ㄑㄩˊ','ㄐㄩㄝ'],a:'ㄐㄩㄝˊ',e:'攫：ㄐㄩㄝˊ。'},
+  {c:'字義',t:'meaning',q:'「攫」的字義是？',o:['抓取','奔跑','躲避','丟棄'],a:'抓取',e:'攫＝抓取。'},
+  {c:'成語',t:'idiom',q:'被利欲蒙蔽，行事不顧後果，對應哪個典故成語？',o:['齊人攫金','守株待兔','刻舟求劍','畫蛇添足'],a:'齊人攫金',e:'答案為「齊人攫金」。'},
+
+  {c:'字義',t:'meaning',q:'「孤伶伶」指什麼？',o:['孤單的樣子','熱鬧的樣子','快速的樣子','憤怒的樣子'],a:'孤單的樣子',e:'孤伶伶＝孤單的樣子。'},
+  {c:'成語',t:'idiom',q:'形容人口才好、能言善道，可用哪個成語？',o:['伶牙俐齒','笨口拙舌','沉默寡言','一言不發'],a:'伶牙俐齒',e:'答案為「伶牙俐齒」。'},
+
+  {c:'字義',t:'meaning',q:'「震懾」的意思最接近哪一項？',o:['震驚恐懼','欣喜若狂','平靜安詳','猶豫不決'],a:'震驚恐懼',e:'震懾＝震驚恐懼。'},
+  {c:'字音',t:'sound',q:'「震懾」的「懾」讀音是？',o:['ㄓㄜˊ','ㄕㄜˋ','ㄋㄧㄝˋ','ㄓㄜ'],a:'ㄓㄜˊ',e:'本課練習重點：懾讀 ㄓㄜˊ。'},
+
+  {c:'字義',t:'meaning',q:'「氣脫委頓」的意思最接近？',o:['失神無力、疲乏困頓','精神振奮、意氣風發','非常害怕而逃跑','因生氣而沉默'],a:'失神無力、疲乏困頓',e:'氣脫委頓形容失神無力、疲乏困頓。'},
+  {c:'字義',t:'meaning',q:'「委以重任」的「委」是什麼意思？',o:['託付、交付','彎曲','放棄','末端'],a:'託付、交付',e:'此處「委」是託付、交付。'},
+  {c:'詞性',t:'meaning',q:'「委以重任」的「委」是什麼詞性？',o:['動詞','名詞','形容詞','副詞'],a:'動詞',e:'表示託付，因此是動詞。'},
+  {c:'字義',t:'meaning',q:'「窮源竟委」的「委」是什麼意思？',o:['末端、末尾','託付','疲倦','彎腰'],a:'末端、末尾',e:'此處的「委」指末端、末尾。'},
+  {c:'詞性',t:'meaning',q:'「窮源竟委」的「委」是什麼詞性？',o:['名詞','動詞','副詞','形容詞'],a:'名詞',e:'表示末端、末尾，屬名詞。'},
+
+  {c:'字音',t:'sound',q:'「匍匐」的「匍」讀音是？',o:['ㄆㄨˊ','ㄆㄨ','ㄅㄨˊ','ㄈㄨˊ'],a:'ㄆㄨˊ',e:'匍匐：ㄆㄨˊ ㄈㄨˊ。'},
+  {c:'字音',t:'sound',q:'「匍匐」的「匐」讀音是？',o:['ㄈㄨˊ','ㄈㄨ','ㄆㄨˊ','ㄈㄨˋ'],a:'ㄈㄨˊ',e:'匍匐：ㄆㄨˊ ㄈㄨˊ。'},
+  {c:'字義',t:'meaning',q:'「匍匐」指什麼動作？',o:['伏地爬行','快速奔跑','原地跳躍','倒退行走'],a:'伏地爬行',e:'匍匐＝伏地爬行。'},
+
+  {c:'字義',t:'meaning',q:'「肆虐」的意思是？',o:['任意作惡為害','四處遊玩','努力工作','低聲說話'],a:'任意作惡為害',e:'肆虐＝任意作惡為害。'},
+  {c:'字音',t:'sound',q:'「肆虐」的「肆」讀音是？',o:['ㄙˋ','ㄕˋ','ㄙ','ㄧˋ'],a:'ㄙˋ',e:'肆：ㄙˋ。'},
+  {c:'字義',t:'meaning',q:'「肆虐」的「肆」字義是？',o:['放縱、任意','排列','數字四','商店'],a:'放縱、任意',e:'肆有放縱、任意之意。'},
+
+  {c:'字義',t:'meaning',q:'「氣勢萬鈞」形容什麼？',o:['氣勢雄偉壯盛','聲音很微弱','動作非常緩慢','態度十分謙虛'],a:'氣勢雄偉壯盛',e:'氣勢萬鈞形容氣勢雄偉壯盛。'},
+  {c:'單位',t:'meaning',q:'下列哪一個是重量單位？',o:['鈞','尺','丈','寸'],a:'鈞',e:'鈞是古代重量單位。'},
+  {c:'單位',t:'meaning',q:'下列哪一組全部都是重量單位？',o:['斤、兩、銖、鈞','丈、尺、寸、仞','斗、尺、鈞、咫','斤、丈、兩、寸'],a:'斤、兩、銖、鈞',e:'重量單位：斤、兩、銖、鈞。'},
+
+  {c:'詞性',t:'meaning',q:'「逞英雄」的「逞」是什麼詞性？',o:['動詞','名詞','副詞','介詞'],a:'動詞',e:'逞表示顯露、展示，屬動詞。'},
+  {c:'字義',t:'meaning',q:'「逞英雄」的「逞」是什麼意思？',o:['顯露、展示','逃避','責備','隱藏'],a:'顯露、展示',e:'逞英雄中的逞＝顯露、展示。'},
+
+  {c:'字義',t:'meaning',q:'「行潦」指什麼？',o:['下雨後匯流或積聚的水','河川上游','海邊浪花','清晨露水'],a:'下雨後匯流或積聚的水',e:'行潦是下雨後匯流或積聚的水。'},
+  {c:'字音',t:'sound',q:'「行潦」的「潦」讀音是？',o:['ㄌㄠˇ','ㄌㄧㄠˊ','ㄌㄠˊ','ㄌㄧㄠˇ'],a:'ㄌㄠˇ',e:'行潦的「潦」讀 ㄌㄠˇ。'},
+  {c:'詞性',t:'meaning',q:'「行潦」的「潦」是什麼詞性？',o:['名詞','形容詞','動詞','副詞'],a:'名詞',e:'此處指積水，屬名詞。'},
+  {c:'字音',t:'sound',q:'「字跡潦草」的「潦」讀音是？',o:['ㄌㄧㄠˊ','ㄌㄠˇ','ㄌㄧㄠˇ','ㄌㄠˊ'],a:'ㄌㄧㄠˊ',e:'潦草的「潦」讀 ㄌㄧㄠˊ。'},
+  {c:'詞性',t:'meaning',q:'「字跡潦草」的「潦」是什麼詞性？',o:['形容詞','名詞','動詞','副詞'],a:'形容詞',e:'潦草形容字跡草率、不工整。'},
+  {c:'字義',t:'meaning',q:'「字跡潦草」的「潦草」意思是？',o:['草率、不工整','華麗整齊','十分端正','模糊不清'],a:'草率、不工整',e:'潦草＝草率、不工整。'},
+
+  {c:'字義',t:'meaning',q:'「蓑衣」是什麼？',o:['用草或棕製成的防雨衣物','古代帽子','農作用的鞋子','盛水的器具'],a:'用草或棕製成的防雨衣物',e:'蓑衣是披在身上遮雨的傳統雨具。'},
+  {c:'字音',t:'sound',q:'「蓑衣」的「蓑」讀音是？',o:['ㄙㄨㄛ','ㄕㄨㄞ','ㄙㄨㄟ','ㄕㄨㄛ'],a:'ㄙㄨㄛ',e:'蓑：ㄙㄨㄛ。'}
+];
+
+let mode='all', deck=[], index=0, score=0, streak=0, maxStreak=0, wrong=[], locked=false;
+
+const $ = id => document.getElementById(id);
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+document.querySelectorAll('.mode').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    mode=btn.dataset.mode;
+    document.querySelectorAll('.mode').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+function buildDeck(source=null){
+  if(source) return shuffle(source);
+  let pool=questions;
+  if(mode!=='all') pool=questions.filter(q=>q.t===mode);
+  return shuffle(pool).slice(0,Math.min(20,pool.length));
+}
+
+function start(source=null){
+  deck=buildDeck(source);
+  index=0; score=0; streak=0; maxStreak=0; wrong=[]; locked=false;
+  $('startPanel').classList.add('hidden');
+  $('resultPanel').classList.add('hidden');
+  $('quizPanel').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  if(index>=deck.length){ finish(); return; }
+  locked=false;
+  const q=deck[index];
+  $('progressText').textContent=`${index+1} / ${deck.length}`;
+  $('scoreText').textContent=`答對 ${score} 題`;
+  $('progressBar').style.width=`${((index+1)/deck.length)*100}%`;
+  $('categoryBadge').textContent=q.c;
+  $('streakBadge').textContent=`🔥 ${streak}`;
+  $('questionText').textContent=q.q;
+  $('feedback').className='feedback hidden';
+  $('feedback').textContent='';
+  const box=$('options');
+  box.innerHTML='';
+  shuffle(q.o).forEach(opt=>{
+    const b=document.createElement('button');
+    b.className='option';
+    b.textContent=opt;
+    b.addEventListener('click',()=>answer(opt,b));
+    box.appendChild(b);
+  });
+}
+
+function answer(opt,button){
+  if(locked) return;
+  locked=true;
+  const q=deck[index];
+  const correct=opt===q.a;
+  document.querySelectorAll('#options button').forEach(b=>b.disabled=true);
+
+  if(correct){
+    score++; streak++; maxStreak=Math.max(maxStreak,streak);
+    button.classList.add('correct');
+    $('feedback').className='feedback ok';
+    $('feedback').innerHTML=`<strong>✅ 答對了！</strong><br>${q.e}`;
+  }else{
+    streak=0; wrong.push(q);
+    button.classList.add('wrong');
+    document.querySelectorAll('#options button').forEach(b=>{
+      if(b.textContent===q.a) b.classList.add('correct');
+    });
+    $('feedback').className='feedback bad';
+    $('feedback').innerHTML=`<strong>❌ 正確答案：${q.a}</strong><br>${q.e}`;
+  }
+
+  $('scoreText').textContent=`答對 ${score} 題`;
+  $('streakBadge').textContent=`🔥 ${streak}`;
+
+  setTimeout(()=>{
+    index++;
+    renderQuestion();
+  },correct?850:1700);
+}
+
+function finish(){
+  $('quizPanel').classList.add('hidden');
+  $('resultPanel').classList.remove('hidden');
+  const pct=deck.length?Math.round(score/deck.length*100):0;
+  $('resultScore').textContent=`${score} / ${deck.length}`;
+  $('resultSummary').textContent=`正確率 ${pct}% ・ 最長連續答對 ${maxStreak} 題`;
+
+  const list=$('wrongList');
+  list.innerHTML='';
+
+  if(!wrong.length){
+    list.innerHTML='<p class="muted">🎉 全部答對，這輪沒有錯題！</p>';
+    $('retryWrongBtn').disabled=true;
+    $('retryWrongBtn').textContent='沒有錯題';
+  }else{
+    $('retryWrongBtn').disabled=false;
+    $('retryWrongBtn').textContent=`只練這 ${wrong.length} 題`;
+    wrong.forEach(q=>{
+      const row=document.createElement('div');
+      row.className='wrong-item';
+      row.innerHTML=`<strong>❌ ${q.q}</strong><br><span class="muted">答案：${q.a}</span>`;
+      list.appendChild(row);
+    });
+  }
+}
+
+$('startBtn').addEventListener('click',()=>start());
+$('retryWrongBtn').addEventListener('click',()=>{ if(wrong.length) start([...wrong]); });
+$('restartBtn').addEventListener('click',()=>{
+  $('resultPanel').classList.add('hidden');
+  $('startPanel').classList.remove('hidden');
+});
+</script>
+</body>
+</html>
